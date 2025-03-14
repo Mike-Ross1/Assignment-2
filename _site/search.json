@@ -1,0 +1,72 @@
+[
+  {
+    "objectID": "Index.html",
+    "href": "Index.html",
+    "title": "Index",
+    "section": "",
+    "text": "title: “Home” author: “Michael Ross RSSMIC035” date: today format: html"
+  },
+  {
+    "objectID": "Index.html#introduction",
+    "href": "Index.html#introduction",
+    "title": "Index",
+    "section": "Introduction",
+    "text": "Introduction\nThis website contains the answers to the questions in Assignment 2 (Parallel computing practical).\nHere is the link to my git repo: Michael Ross GitHub"
+  },
+  {
+    "objectID": "Question_1.html",
+    "href": "Question_1.html",
+    "title": "Question 1",
+    "section": "",
+    "text": "library(doParallel)\nlibrary(parallel)\nlibrary(foreach)\n\nnumCores = detectCores() -1\ncl &lt;- makeCluster(numCores)\nregisterDoParallel(cl)\nn &lt;- 100\n\nresults &lt;- foreach(i = 1:n, .combine = rbind, .packages = \"stats\") %dopar% {\n  sample_d &lt;- rexp(100, rate = 1)\n  mean_s &lt;- mean(sample_d)\n  var_s &lt;- var(sample_d)\n  c(mean_s, var_s)\n}\nstopCluster(cl)\n\nresult_df &lt;- as.data.frame(results)\ncolnames(result_df) &lt;- c(\"Mean\", \"Variance\")\nhead(result_df)\n\n              Mean  Variance\nresult.1 0.9719256 0.9912468\nresult.2 1.0220662 0.9874425\nresult.3 0.8260063 0.5792809\nresult.4 0.9627886 0.8131956\nresult.5 1.1299804 1.8057974\nresult.6 0.9445108 1.3987025"
+  },
+  {
+    "objectID": "Assignment_2_qmd.html",
+    "href": "Assignment_2_qmd.html",
+    "title": "Assignment 2: Parallel Computing",
+    "section": "",
+    "text": "library(foreach)\nlibrary(doParallel)\nlibrary(MASS)\nlibrary(boot)\nlibrary(iterators)\nlibrary(parallel)\nlibrary(microbenchmark)\nlibrary(knitr)"
+  },
+  {
+    "objectID": "Assignment_2_qmd.html#packages",
+    "href": "Assignment_2_qmd.html#packages",
+    "title": "Assignment 2: Parallel Computing",
+    "section": "",
+    "text": "library(foreach)\nlibrary(doParallel)\nlibrary(MASS)\nlibrary(boot)\nlibrary(iterators)\nlibrary(parallel)\nlibrary(microbenchmark)\nlibrary(knitr)"
+  },
+  {
+    "objectID": "Assignment_2_qmd.html#question-1",
+    "href": "Assignment_2_qmd.html#question-1",
+    "title": "Assignment 2: Parallel Computing",
+    "section": "Question 1",
+    "text": "Question 1\n\nnumCores = detectCores() -1\ncl &lt;- makeCluster(numCores)\nregisterDoParallel(cl)\nn &lt;- 100\n\nresults &lt;- foreach(i = 1:n, .combine = rbind, .packages = \"stats\") %dopar% {\n  sample_d &lt;- rexp(100, rate = 1)\n  mean_s &lt;- mean(sample_d)\n  var_s &lt;- var(sample_d)\n  c(mean_s, var_s)\n}\nstopCluster(cl)\n\nresult_df &lt;- as.data.frame(results)\ncolnames(result_df) &lt;- c(\"Mean\", \"Variance\")\nhead(result_df)\n\n              Mean  Variance\nresult.1 0.9346884 1.5268906\nresult.2 1.0421302 0.8608807\nresult.3 0.8904600 0.9553193\nresult.4 0.9686686 0.8864929\nresult.5 1.0750635 1.4701783\nresult.6 0.8857652 0.6553371"
+  },
+  {
+    "objectID": "Assignment_2_qmd.html#question-2",
+    "href": "Assignment_2_qmd.html#question-2",
+    "title": "Assignment 2: Parallel Computing",
+    "section": "Question 2",
+    "text": "Question 2\nFirst setting the number of bootstrap samples = 1000 and trying chunk sizes of 100 and 1000 respectively. Note that the first few results from the bootstrap are displayed to show that they are yeilding plausible output.\n\nnumCores &lt;- detectCores() - 1\ncl &lt;- makeCluster(numCores)\nregisterDoParallel(cl)\n\nnumBootstraps &lt;- 1000\nchunkSize &lt;- 100\n\n#Parralel bootstrapping\nsystem.time({\n  boot_parallel &lt;- foreach(i = 1:numBootstraps, .combine = c, .packages = \"MASS\") %dopar% {\n    samp_med &lt;- median(sample(galaxies, replace = TRUE))\n    samp_med\n  }\n})\n\n   user  system elapsed \n   0.14    0.04    0.25 \n\n# Serial Bootstrapping\nsystem.time({\n  boot_serial &lt;- sapply(1:numBootstraps, function(i) median(sample(galaxies, replace = TRUE)))\n})\n\n   user  system elapsed \n   0.03    0.00    0.05 \n\n# Chunked Parallel Bootstrapping\nsystem.time({\n  boot_chunked &lt;- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = \"MASS\") %dopar% {\n    replicate(chunkSize, median(sample(galaxies, replace = TRUE))) \n  }\n})\n\n   user  system elapsed \n   0.00    0.00    0.02 \n\nstopCluster(cl)\n\nhead(boot_parallel)\n\n[1] 20833.5 21314.5 21137.0 21492.0 20415.0 20875.0\n\nhead(boot_serial)\n\n[1] 20930.5 20422.0 20833.5 20522.0 21814.0 21137.0\n\nhead(boot_chunked)\n\n[1] 21867.5 20795.0 21314.5 20986.0 21830.5 20795.0\n\nnumCores &lt;- detectCores() - 1\ncl &lt;- makeCluster(numCores)\nregisterDoParallel(cl)\n\nnumBootstraps &lt;- 1000\nchunkSize &lt;- 100\n\nsystem.time({\n  boot_parallel &lt;- foreach(i = 1:numBootstraps, .combine = c, .packages = \"MASS\") %dopar% {\n    samp_med &lt;- median(sample(galaxies, replace = TRUE))\n    samp_med\n  }\n})\n\n   user  system elapsed \n   0.11    0.10    0.26 \n\n# Serial Bootstrapping\nsystem.time({\n  boot_serial &lt;- sapply(1:numBootstraps, function(i) median(sample(galaxies, replace = TRUE)))\n})\n\n   user  system elapsed \n   0.03    0.00    0.05 \n\n# Chunked Parallel Bootstrapping\nsystem.time({\n  boot_chunked &lt;- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = \"MASS\") %dopar% {\n    replicate(chunkSize, median(sample(galaxies, replace = TRUE)))\n  }\n})\n\n   user  system elapsed \n   0.02    0.00    0.02 \n\nstopCluster(cl)\n\nhead(boot_parallel)\n\n[1] 20629.0 21701.0 20821.0 20179.0 22072.5 20221.0\n\nhead(boot_serial)\n\n[1] 21814.0 20875.0 20846.0 20221.0 21596.5 20875.0\n\nhead(boot_chunked)\n\n[1] 20846.0 21492.0 20221.0 20712.0 20860.5 20495.5\n\n\nNow setting the number of bootstrap samples = 10000 and testing across the same chunk sizes.\n\n\n   user  system elapsed \n   1.73    0.15    1.95 \n\n\n   user  system elapsed \n   0.39    0.00    0.39 \n\n\n   user  system elapsed \n   0.05    0.00    0.08 \n\n\n   user  system elapsed \n   1.67    0.24    1.97 \n\n\n   user  system elapsed \n   0.35    0.01    0.38 \n\n\n   user  system elapsed \n   0.00    0.00    0.06 \n\n\nAs seen above, the serial boot() function takes much longer than parallel execution with foreach. Also, execution time is slightly reduced when going from chunk sizes of 100 to chunks sizes of 1000. This suggests that overhead from data transfer dominates when using single-sample parallelism, but batching improves efficiency."
+  },
+  {
+    "objectID": "Assignment_2_qmd.html#question-3",
+    "href": "Assignment_2_qmd.html#question-3",
+    "title": "Assignment 2: Parallel Computing",
+    "section": "Question 3",
+    "text": "Question 3\n\ncl &lt;- makeCluster(detectCores() - 1)\nregisterDoParallel(cl)\n\nboot_mean &lt;- function(data, indices) {\n  return(mean(data[indices]))\n}\n\nset.seed(123)\nn_sim &lt;- 1000\nn_samp &lt;- 50\nalpha &lt;- 0.05\n\n# Run simulations in parallel\nresults &lt;- foreach(i = 1:n_sim, .combine = c, .packages = \"boot\") %dopar% {\n  samp_data &lt;- rexp(n_samp, rate = 1)  # Mean is 1\n  boot_res &lt;- boot(samp_data, statistic = boot_mean, R = 1000)\n  ci &lt;- boot.ci(boot_res, type = \"perc\")$percent[4:5]\n  (ci[1] &lt;= 1) & (ci[2] &gt;= 1)\n}\n\nstopCluster(cl)\n\ncov_prob &lt;- mean(results)\nprint(paste(\"Estimated Coverage:\", round(cov_prob, 3)))\n\n[1] \"Estimated Coverage: 0.926\""
+  },
+  {
+    "objectID": "Assignment_2_qmd.html#question-4",
+    "href": "Assignment_2_qmd.html#question-4",
+    "title": "Assignment 2: Parallel Computing",
+    "section": "Question 4",
+    "text": "Question 4\n\ncl &lt;- makeCluster(2)\nregisterDoParallel(cl)\n\nset.seed(1234)\n\n\nit &lt;- irnorm(3, 5)\nmax_values &lt;- foreach(vec = irnorm(n = 5, count = 3), .combine = c) %do% {\n  max(vec)\n}\n\nresults &lt;- data.frame(MaxValues = max_values)\nstopCluster(cl)\nkable(results)\n\n\n\n\nMaxValues\n\n\n\n\n1.0844412\n\n\n0.5060559\n\n\n0.9594941"
+  },
+  {
+    "objectID": "Assignment_2_qmd.html#question-5",
+    "href": "Assignment_2_qmd.html#question-5",
+    "title": "Assignment 2: Parallel Computing",
+    "section": "Question 5",
+    "text": "Question 5\n\nlibrary(parallel)\nlibrary(foreach)\nlibrary(iterators)\nlibrary(microbenchmark)\n\nset.seed(1234)\n\nn_iters &lt;- 1000\nvec_size &lt;- 5\n\n\ngenerate_max &lt;- function() {\n  max(rnorm(vec_size))\n}\n\nreplicate_test &lt;- function() {\n  replicate(n_iters, generate_max())\n}\n\nforeach_test &lt;- function() {\n  foreach(i = 1:n_iters, .combine = c) %do% {\n    generate_max()\n  }\n}\n\ncl &lt;- makeCluster(detectCores() - 1)\nclusterExport(cl, c(\"generate_max\", \"vec_size\")) \nclusterSetRNGStream(cl, 1234)\n\nparLapply_test &lt;- function() {\n  unlist(parLapply(cl, 1:n_iters, function(i) generate_max()))\n}\n\nbenchmark_results &lt;- microbenchmark(\n  replicate = replicate_test(),\n  foreach = foreach_test(),\n  parLapply = parLapply_test(),\n  times = 10\n)\n\nstopCluster(cl)\n\nThe table below contains the execution times for the different methods in milliseconds.\n\n\n\nMethod\nMin (ms)\nMedian (ms)\nMean (ms)\nMax (ms)\n\n\n\n\nreplicate\n4.49\n4.67\n5.03\n6.74\n\n\nforeach\n539.75\n583.91\n656.97\n810.10\n\n\nparLapply\n4.72\n6.56\n17.43\n115.94\n\n\n\nAs seen in the table above, foreach was much slower with a mean time of 656.97, with parLapply having a mean of 17.43 milliseconds and replicate performing best with a mean of 5.03 milliseconds."
+  }
+]

@@ -249,7 +249,7 @@ library(iterators)
 
 set.seed(1234)
 
-# Create an iterator that generates 3 vectors of 5 normally distributed random numbers each
+
 it <- irnorm(3, 5)
 
 # Use foreach to iterate over the vectors and find the largest value in each

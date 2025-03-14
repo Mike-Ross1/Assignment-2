@@ -1,0 +1,17 @@
+---
+title: "Index"
+format: html
+---
+
+title: "Home"
+author: "Michael Ross RSSMIC035"
+date: today
+format: html
+---
+
+## Introduction
+
+This website contains the answers to the questions in Assignment 2 (Parallel computing practical).
+
+Here is the link to my git repo: [Michael Ross GitHub](https://github.com/Mike-Ross1/Assignment-2)
+
