@@ -45,24 +45,127 @@ head(result_df)
 
 ## Question 2
 
+First setting the number of bootstrap samples = 1000 and trying chunk sizes of 100 and 1000 respectively. Note that the first few results from the bootstrap are displayed to show that they are yeilding plausible output.
 ```{r}
-temp_summary = airquality_data %>% summarise(
-  mean_temp = mean(Temp, na.rm = TRUE),
-  sd_temp = sd(Temp, na.rm = TRUE),
-  min_temp = min(Temp, na.rm = TRUE),
-  max_temp = max(Temp, na.rm = TRUE),
-)
+numCores <- detectCores() - 1
+cl <- makeCluster(numCores)
+registerDoParallel(cl)
 
-ozone_summary = airquality_data %>% summarise(
-  mean_ozone = mean(Ozone, na.rm = TRUE),
-  sd_ozone = sd(Ozone, na.rm = TRUE),
-  min_ozone = min(Ozone, na.rm = TRUE),
-  max_ozone = max(Ozone, na.rm = TRUE),
-)
+numBootstraps <- 1000
+chunkSize <- 100
 
-temp_summary
-ozone_summary
+#Parralel bootstrapping
+system.time({
+  boot_parallel <- foreach(i = 1:numBootstraps, .combine = c, .packages = "MASS") %dopar% {
+    samp_med <- median(sample(galaxies, replace = TRUE))
+    samp_med
+  }
+})
 
+# Serial Bootstrapping
+system.time({
+  boot_serial <- sapply(1:numBootstraps, function(i) median(sample(galaxies, replace = TRUE)))
+})
+
+# Chunked Parallel Bootstrapping
+system.time({
+  boot_chunked <- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = "MASS") %dopar% {
+    replicate(chunkSize, median(sample(galaxies, replace = TRUE))) 
+  }
+})
+
+stopCluster(cl)
+
+head(boot_parallel)
+head(boot_serial)
+head(boot_chunked)
+
+chunkSize <- 1000
+
+system.time({
+  boot_parallel <- foreach(i = 1:numBootstraps, .combine = c, .packages = "MASS") %dopar% {
+    samp_med <- median(sample(galaxies, replace = TRUE))
+    samp_med
+  }
+})
+
+# Serial Bootstrapping
+system.time({
+  boot_serial <- sapply(1:numBootstraps, function(i) median(sample(galaxies, replace = TRUE)))
+})
+
+# Chunked Parallel Bootstrapping
+system.time({
+  boot_chunked <- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = "MASS") %dopar% {
+    replicate(chunkSize, median(sample(galaxies, replace = TRUE)))
+  }
+})
+
+stopCluster(cl)
+
+head(boot_parallel)
+head(boot_serial)
+head(boot_chunked)
+
+```
+
+Now setting the number of bootstrap samples = 10000 and testing across the same chunk sizes.
+```{r}
+numBootstraps <- 10000
+chunkSize <- 100
+
+#Parralel bootstrapping
+system.time({
+  boot_parallel <- foreach(i = 1:numBootstraps, .combine = c, .packages = "MASS") %dopar% {
+    samp_med <- median(sample(galaxies, replace = TRUE))
+    samp_med
+  }
+})
+
+# Serial Bootstrapping
+system.time({
+  boot_serial <- sapply(1:numBootstraps, function(i) median(sample(galaxies, replace = TRUE)))
+})
+
+# Chunked Parallel Bootstrapping
+system.time({
+  boot_chunked <- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = "MASS") %dopar% {
+    replicate(chunkSize, median(sample(galaxies, replace = TRUE))) 
+  }
+})
+
+stopCluster(cl)
+
+head(boot_parallel)
+head(boot_serial)
+head(boot_chunked)
+
+chunkSize <- 1000
+
+system.time({
+  boot_parallel <- foreach(i = 1:numBootstraps, .combine = c, .packages = "MASS") %dopar% {
+    samp_med <- median(sample(galaxies, replace = TRUE))
+    samp_med
+  }
+})
+
+# Serial Bootstrapping
+system.time({
+  boot_serial <- sapply(1:numBootstraps, function(i) median(sample(galaxies, replace = TRUE)))
+})
+
+# Chunked Parallel Bootstrapping
+system.time({
+  boot_chunked <- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = "MASS") %dopar% {
+    replicate(chunkSize, median(sample(galaxies, replace = TRUE)))
+  }
+})
+
+stopCluster(cl)
+
+head(boot_parallel)
+head(boot_serial)
+head(boot_chunked)
 ```
 
 ## Question 3
