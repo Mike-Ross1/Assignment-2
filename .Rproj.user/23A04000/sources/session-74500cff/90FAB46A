@@ -1,26 +1,26 @@
 {
-    "id": "E532082A",
-    "path": "~/SC 2025/Assignment wrong 2/Q1 C.R",
+    "id": "90FAB46A",
+    "path": "~/Honours 2025 Projects/Prac1_Quarto/Practical_One.qmd",
     "project_path": null,
-    "type": "r_source",
+    "type": "quarto_markdown",
     "hash": "0",
     "contents": "",
     "dirty": false,
-    "created": 1741949964862.0,
+    "created": 1741951401104.0,
     "source_on_save": false,
-    "relative_order": 3,
+    "relative_order": 4,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "155,24",
-        "scrollLine": "130"
+        "cursorPosition": "62,3",
+        "scrollLine": "38"
     },
     "folds": "",
-    "lastKnownWriteTime": 1741891122,
+    "lastKnownWriteTime": 1740055542,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1741891122,
+    "last_content_update": 1740055542,
     "read_only": false,
     "read_only_alternatives": []
 }

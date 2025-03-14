@@ -31,7 +31,63 @@ numCores <- detectCores() - 1
 cl <- makeCluster(numCores)
 registerDoParallel(cl)
 
-numBootstraps <- 20000
+numBootstraps <- 1000
+chunkSize <- 100
+
+#Parralel bootstrapping
+system.time({
+  boot_parallel <- foreach(i = 1:numBootstraps, .combine = c, .packages = "MASS") %dopar% {
+    samp_med <- median(sample(galaxies, replace = TRUE))
+    samp_med
+  }
+})
+
+# Serial Bootstrapping
+system.time({
+  boot_serial <- sapply(1:numBootstraps, function(i) median(sample(galaxies, replace = TRUE)))
+})
+
+# Chunked Parallel Bootstrapping
+system.time({
+  boot_chunked <- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = "MASS") %dopar% {
+    replicate(chunkSize, median(sample(galaxies, replace = TRUE))) 
+  }
+})
+
+stopCluster(cl)
+
+head(boot_parallel)
+head(boot_serial)
+head(boot_chunked)
+
+chunkSize <- 1000
+
+system.time({
+  boot_parallel <- foreach(i = 1:numBootstraps, .combine = c, .packages = "MASS") %dopar% {
+    samp_med <- median(sample(galaxies, replace = TRUE))
+    samp_med
+  }
+})
+
+# Serial Bootstrapping
+system.time({
+  boot_serial <- sapply(1:numBootstraps, function(i) median(sample(galaxies, replace = TRUE)))
+})
+
+# Chunked Parallel Bootstrapping
+system.time({
+  boot_chunked <- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = "MASS") %dopar% {
+    replicate(chunkSize, median(sample(galaxies, replace = TRUE)))
+  }
+})
+
+stopCluster(cl)
+
+head(boot_parallel)
+head(boot_serial)
+head(boot_chunked)
+
+numBootstraps <- 10000
 chunkSize <- 100
 
 #Parralel bootstrapping
@@ -88,7 +144,6 @@ head(boot_serial)
 head(boot_chunked)
 
 
-
 ############## Question 3 ##################
 
 library(boot)
@@ -127,3 +182,64 @@ stopCluster(cl)
 cov_prob <- mean(results)
 print(paste("Estimated Coverage:", round(cov_prob, 3)))
 
+############# Question 4 ###################
+
+library(foreach)
+library(iterators)
+
+set.seed(1000)
+
+iterat <- irnorm(3, 5)
+
+
+max_vals <- foreach(vec = iterat, .combine = c) %do% {
+  max(vec)
+}
+
+print(max_vals)
+
+
+############### Question 5 #############
+
+library(parallel)
+library(foreach)
+library(iterators)
+library(microbenchmark)
+
+set.seed(1000)
+
+n_iters <- 3
+vec_size <- 5
+
+generate_max <- function() {
+  max(rnorm(vec_size))
+}
+
+replicate_test <- function() {
+  replicate(n_iters, generate_max())
+}
+
+foreach_test <- function() {
+  it <- irnorm(n_iters, vec_size)
+  foreach(vec = it, .combine = c) %do% {
+    max(vec)
+  }
+}
+
+cl <- makeCluster(detectCores() - 1)  # Create cluster
+clusterSetRNGStream(cl, 1000)  # Set seed for cluster
+
+parLapply_test <- function() {
+  parLapply(cl, 1:n_iters, function(i) generate_max())
+}
+
+benchmark_results <- microbenchmark(
+  replicate = replicate_test(),
+  foreach = foreach_test(),
+  parLapply = parLapply_test(),
+  times = 100
+)
+
+stopCluster(cl)
+
+print(benchmark_results)
