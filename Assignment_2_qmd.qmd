@@ -1,11 +1,9 @@
 ---
-title: "Parallel"
+title: "Assignment 2: Parallel Computing"
 format: html
----
-
----
-title: "Practical One"
-format: html
+execute:
+  warning: false
+  message: false
 ---
 
 ## Packages
@@ -85,7 +83,7 @@ cl <- makeCluster(numCores)
 registerDoParallel(cl)
 
 numBootstraps <- 1000
-chunkSize <- 1000
+chunkSize <- 100
 
 system.time({
   boot_parallel <- foreach(i = 1:numBootstraps, .combine = c, .packages = "MASS") %dopar% {
@@ -115,7 +113,7 @@ head(boot_chunked)
 ```
 
 Now setting the number of bootstrap samples = 10000 and testing across the same chunk sizes.
-```{r}
+```{r echo=FALSE}
 numCores <- detectCores() - 1
 cl <- makeCluster(numCores)
 registerDoParallel(cl)
@@ -145,9 +143,6 @@ system.time({
 
 stopCluster(cl)
 
-head(boot_parallel)
-head(boot_serial)
-head(boot_chunked)
 numCores <- detectCores() - 1
 cl <- makeCluster(numCores)
 registerDoParallel(cl)
@@ -176,10 +171,11 @@ system.time({
 
 stopCluster(cl)
 
-head(boot_parallel)
-head(boot_serial)
-head(boot_chunked)
 ```
+
+As seen above, the serial boot() function takes much longer than parallel execution with foreach.
+Also, execution time is slightly reduced when going from chunk sizes of 100 to chunks sizes of 1000.
+This suggests that overhead from data transfer dominates when using single-sample parallelism, but batching improves efficiency.
 
 ## Question 3
 
@@ -214,19 +210,20 @@ print(paste("Estimated Coverage:", round(cov_prob, 3)))
 ## Question 4
 
 ```{r,}
+cl <- makeCluster(2)
+registerDoParallel(cl)
+
 set.seed(1234)
 
-# Generate list of 3 vectors, each containing 5 random numbers
-iter_list <- iter(replicate(3, rnorm(5), simplify = FALSE))
 
-# Use foreach properly
-max_vals <- foreach(vec = iter_list, .combine = c) %do% {
-  print(vec)  # Debug: Print each vector
-  max(vec)    # Compute max value
+it <- irnorm(3, 5)
+max_values <- foreach(vec = irnorm(n = 5, count = 3), .combine = c) %do% {
+  max(vec)
 }
 
-# Print final result
-print(max_vals)
+results <- data.frame(MaxValues = max_values)
+stopCluster(cl)
+kable(results)
 ```
 
 ## Question 5
@@ -275,11 +272,12 @@ benchmark_results <- microbenchmark(
 stopCluster(cl)
 
 ```
-The table below contains the execution times for the different methods in milliseconds. 
-| Method    | Min (ms) | Median (ms) | Mean (ms) | Max (ms) |
-|-----------|---------|-------------|-----------|---------|
-| **replicate**  | 4.49  | 4.67  | 5.03  | 6.74  |
-| **foreach**    | 539.75  | 583.91  | 656.97  | 810.10  |
-| **parLapply**  | 4.72  | 6.56  | 17.43  | 115.94  |
+The table below contains the execution times for the different methods in milliseconds.
+
+| Method      | Min (ms) | Median (ms) | Mean (ms) | Max (ms) |
+| ----------- | -------- | ----------- | --------- | -------- |
+| **replicate** | 4.49     | 4.67        | 5.03      | 6.74     |
+| **foreach** | 539.75   | 583.91      | 656.97    | 810.10   |
+| **parLapply** | 4.72     | 6.56        | 17.43     | 115.94   |
 
 As seen in the table above, foreach was much slower with a mean time of 656.97, with parLapply having a mean of 17.43 milliseconds and replicate performing best with a mean of 5.03 milliseconds.
