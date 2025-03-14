@@ -31,9 +31,10 @@ numCores <- detectCores() - 1
 cl <- makeCluster(numCores)
 registerDoParallel(cl)
 
-numBootstraps <- 1000
+numBootstraps <- 20000
 chunkSize <- 100
 
+#Parralel bootstrapping
 system.time({
   boot_parallel <- foreach(i = 1:numBootstraps, .combine = c, .packages = "MASS") %dopar% {
     samp_med <- median(sample(galaxies, replace = TRUE))
@@ -49,7 +50,7 @@ system.time({
 # Chunked Parallel Bootstrapping
 system.time({
   boot_chunked <- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = "MASS") %dopar% {
-    replicate(chunkSize, median(sample(galaxies, replace = TRUE)))  # Do 1000 at a time
+    replicate(chunkSize, median(sample(galaxies, replace = TRUE))) 
   }
 })
 
@@ -76,7 +77,7 @@ system.time({
 # Chunked Parallel Bootstrapping
 system.time({
   boot_chunked <- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = "MASS") %dopar% {
-    replicate(chunkSize, median(sample(galaxies, replace = TRUE)))  # Do 1000 at a time
+    replicate(chunkSize, median(sample(galaxies, replace = TRUE)))
   }
 })
 
@@ -93,7 +94,7 @@ head(boot_chunked)
 library(boot)
 library(doParallel)
 
-cl <- makeCluster(detectCores() - 1)  # Use available cores minus 1
+cl <- makeCluster(detectCores() - 1)
 registerDoParallel(cl)
 
 boot_mean <- function(data, indices) {
