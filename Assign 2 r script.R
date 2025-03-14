@@ -181,7 +181,11 @@ library(iterators)
 
 set.seed(1234)
 
-iterat <- irnorm(3, 5)
+it <- irnorm(3, count=5)
+nextElem(it)
+nextElem(it)
+nextElem(it)
+try(nextElem(it)
 
 
 max_vals <- foreach(vec = iterat, .combine = c) %do% {
@@ -235,3 +239,23 @@ benchmark_results <- microbenchmark(
 stopCluster(cl)
 
 print(benchmark_results)
+
+
+
+
+
+library(foreach)
+library(iterators)
+
+set.seed(1234)
+
+# Create an iterator that generates 3 vectors of 5 normally distributed random numbers each
+it <- irnorm(3, 5)
+
+# Use foreach to iterate over the vectors and find the largest value in each
+largest_values <- foreach(i = it, .combine = c) %do% {
+  max(i)
+}
+
+# Print the largest values
+print(largest_values)
