@@ -163,17 +163,9 @@ alpha <- 0.05
 
 # Run simulations in parallel
 results <- foreach(i = 1:n_sim, .combine = c, .packages = "boot") %dopar% {
-  
-  # Generate a sample from Exp(1)
   samp_data <- rexp(n_samp, rate = 1)  # Mean is 1
-  
-  # Bootstrap resampling
   boot_res <- boot(samp_data, statistic = boot_mean, R = 1000)
-  
-  # Compute percentile confidence interval
   ci <- boot.ci(boot_res, type = "perc")$percent[4:5]
-  
-  # Check if true mean (1) is within the interval
   (ci[1] <= 1) & (ci[2] >= 1)
 }
 
@@ -187,7 +179,7 @@ print(paste("Estimated Coverage:", round(cov_prob, 3)))
 library(foreach)
 library(iterators)
 
-set.seed(1000)
+set.seed(1234)
 
 iterat <- irnorm(3, 5)
 
@@ -200,16 +192,16 @@ print(max_vals)
 
 
 ############### Question 5 #############
-
 library(parallel)
 library(foreach)
 library(iterators)
 library(microbenchmark)
 
-set.seed(1000)
+set.seed(1234)
 
-n_iters <- 3
+n_iters <- 1000
 vec_size <- 5
+
 
 generate_max <- function() {
   max(rnorm(vec_size))
@@ -220,24 +212,24 @@ replicate_test <- function() {
 }
 
 foreach_test <- function() {
-  it <- irnorm(n_iters, vec_size)
-  foreach(vec = it, .combine = c) %do% {
-    max(vec)
+  foreach(i = 1:n_iters, .combine = c) %do% {
+    generate_max()
   }
 }
 
-cl <- makeCluster(detectCores() - 1)  # Create cluster
-clusterSetRNGStream(cl, 1000)  # Set seed for cluster
+cl <- makeCluster(detectCores() - 1)
+clusterExport(cl, c("generate_max", "vec_size")) 
+clusterSetRNGStream(cl, 1234)
 
 parLapply_test <- function() {
-  parLapply(cl, 1:n_iters, function(i) generate_max())
+  unlist(parLapply(cl, 1:n_iters, function(i) generate_max()))
 }
 
 benchmark_results <- microbenchmark(
   replicate = replicate_test(),
   foreach = foreach_test(),
   parLapply = parLapply_test(),
-  times = 100
+  times = 10
 )
 
 stopCluster(cl)

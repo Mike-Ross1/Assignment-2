@@ -1,27 +1,25 @@
 {
-    "id": "0AB9C632",
+    "id": "E93F3AD7",
     "path": null,
     "project_path": null,
-    "type": "r_source",
+    "type": "r_code_browser",
     "hash": "0",
     "contents": "",
-    "dirty": true,
-    "created": 1741949918415.0,
+    "dirty": false,
+    "created": 1741954058452.0,
     "source_on_save": false,
-    "relative_order": 2,
+    "relative_order": 6,
     "properties": {
-        "tempName": "Untitled1",
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "237,0",
-        "scrollLine": "212"
+        "context": "package:base:::replicate"
     },
     "folds": "",
-    "lastKnownWriteTime": 562949960003432,
+    "lastKnownWriteTime": 8080056003806104108,
     "encoding": "",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1741954558941,
+    "last_content_update": 1741954058452,
     "read_only": false,
     "read_only_alternatives": []
 }

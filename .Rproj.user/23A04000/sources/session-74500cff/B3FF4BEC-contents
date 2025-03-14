@@ -18,6 +18,7 @@ library(boot)
 library(iterators)
 library(parallel)
 library(microbenchmark)
+library(knitr)
 
 ```
 
@@ -171,16 +172,103 @@ head(boot_chunked)
 ## Question 3
 
 ```{r}
-speed_matrix = matrix(cbind(1, cars_data$speed), ncol=2)
-Y = cars_data$dist
+cl <- makeCluster(detectCores() - 1)
+registerDoParallel(cl)
 
-beta_hat = solve(t(speed_matrix) %*% speed_matrix) %*% t(speed_matrix) %*% Y
-beta_hat
+boot_mean <- function(data, indices) {
+  return(mean(data[indices]))
+}
+
+set.seed(123)
+n_sim <- 1000
+n_samp <- 50
+alpha <- 0.05
+
+# Run simulations in parallel
+results <- foreach(i = 1:n_sim, .combine = c, .packages = "boot") %dopar% {
+  samp_data <- rexp(n_samp, rate = 1)  # Mean is 1
+  boot_res <- boot(samp_data, statistic = boot_mean, R = 1000)
+  ci <- boot.ci(boot_res, type = "perc")$percent[4:5]
+  (ci[1] <= 1) & (ci[2] >= 1)
+}
+
+stopCluster(cl)
+
+cov_prob <- mean(results)
+print(paste("Estimated Coverage:", round(cov_prob, 3)))
+
 ```
 
 ## Question 4
 
 ```{r,}
-lm_model <- lm(dist ~ speed, data = cars_data)
-summary(lm_model)$coefficients
+library(foreach)
+library(iterators)
+
+set.seed(1000)
+
+iterat <- irnorm(3, 5)
+
+
+max_vals <- foreach(vec = iterat, .combine = c) %do% {
+  max(vec)
+}
+
+print(max_vals)
+
 ```
+
+## Question 5
+
+```{r,}
+library(parallel)
+library(foreach)
+library(iterators)
+library(microbenchmark)
+
+set.seed(1234)
+
+n_iters <- 1000
+vec_size <- 5
+
+
+generate_max <- function() {
+  max(rnorm(vec_size))
+}
+
+replicate_test <- function() {
+  replicate(n_iters, generate_max())
+}
+
+foreach_test <- function() {
+  foreach(i = 1:n_iters, .combine = c) %do% {
+    generate_max()
+  }
+}
+
+cl <- makeCluster(detectCores() - 1)
+clusterExport(cl, c("generate_max", "vec_size")) 
+clusterSetRNGStream(cl, 1234)
+
+parLapply_test <- function() {
+  unlist(parLapply(cl, 1:n_iters, function(i) generate_max()))
+}
+
+benchmark_results <- microbenchmark(
+  replicate = replicate_test(),
+  foreach = foreach_test(),
+  parLapply = parLapply_test(),
+  times = 10
+)
+
+stopCluster(cl)
+
+```
+The table below contains the execution times for the different methods in milliseconds. 
+| Method    | Min (ms) | Median (ms) | Mean (ms) | Max (ms) |
+|-----------|---------|-------------|-----------|---------|
+| **replicate**  | 4.49  | 4.67  | 5.03  | 6.74  |
+| **foreach**    | 539.75  | 583.91  | 656.97  | 810.10  |
+| **parLapply**  | 4.72  | 6.56  | 17.43  | 115.94  |
+
+As seen in the table above, foreach was much slower with a mean time of 656.97, with parLapply having a mean of 17.43 milliseconds and replicate performing best with a mean of 5.03 milliseconds.
