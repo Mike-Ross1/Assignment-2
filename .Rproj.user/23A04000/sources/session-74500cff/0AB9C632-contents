@@ -1,0 +1,128 @@
+############### Question 1 #################
+#Use a foreach loop to repeat 100 times:generate a random sample from an exponential distribution with mean 1 calculate mean and variance row-bind your results (rbind) (results = mean and variance).
+
+
+library(doParallel)
+library(foreach)
+
+numCores = detectCores() -1
+cl <- makeCluster(numCores)
+registerDoParallel(numCores)
+n <- 100
+
+results <- foreach(i = 1:n, .combine = rbind, .packages = "stats") %dopar% {
+  sample_d <- rexp(100, rate = 1)
+  mean_s <- mean(sample_d)
+  var_s <- var(sample_d)
+  c(mean_s, var_s)
+}
+stopCluster(cl)
+
+result_df <- as.data.frame(results)
+colnames(result_df) <- c("Mean", "Variance")
+head(result_df)
+
+############# Question 2 ##################
+library(foreach)
+library(doParallel)
+library(MASS)
+
+numCores <- detectCores() - 1
+cl <- makeCluster(numCores)
+registerDoParallel(cl)
+
+numBootstraps <- 1000
+chunkSize <- 100
+
+system.time({
+  boot_parallel <- foreach(i = 1:numBootstraps, .combine = c, .packages = "MASS") %dopar% {
+    samp_med <- median(sample(galaxies, replace = TRUE))
+    samp_med
+  }
+})
+
+# Serial Bootstrapping
+system.time({
+  boot_serial <- sapply(1:numBootstraps, function(i) median(sample(galaxies, replace = TRUE)))
+})
+
+# Chunked Parallel Bootstrapping
+system.time({
+  boot_chunked <- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = "MASS") %dopar% {
+    replicate(chunkSize, median(sample(galaxies, replace = TRUE)))  # Do 1000 at a time
+  }
+})
+
+stopCluster(cl)
+
+head(boot_parallel)
+head(boot_serial)
+head(boot_chunked)
+
+chunkSize <- 1000
+
+system.time({
+  boot_parallel <- foreach(i = 1:numBootstraps, .combine = c, .packages = "MASS") %dopar% {
+    samp_med <- median(sample(galaxies, replace = TRUE))
+    samp_med
+  }
+})
+
+# Serial Bootstrapping
+system.time({
+  boot_serial <- sapply(1:numBootstraps, function(i) median(sample(galaxies, replace = TRUE)))
+})
+
+# Chunked Parallel Bootstrapping
+system.time({
+  boot_chunked <- foreach(i = 1:(numBootstraps/chunkSize), .combine = c, .packages = "MASS") %dopar% {
+    replicate(chunkSize, median(sample(galaxies, replace = TRUE)))  # Do 1000 at a time
+  }
+})
+
+stopCluster(cl)
+
+head(boot_parallel)
+head(boot_serial)
+head(boot_chunked)
+
+
+
+############## Question 3 ##################
+
+library(boot)
+library(doParallel)
+
+cl <- makeCluster(detectCores() - 1)  # Use available cores minus 1
+registerDoParallel(cl)
+
+boot_mean <- function(data, indices) {
+  return(mean(data[indices]))
+}
+
+set.seed(123)
+n_sim <- 1000
+n_samp <- 50
+alpha <- 0.05
+
+# Run simulations in parallel
+results <- foreach(i = 1:n_sim, .combine = c, .packages = "boot") %dopar% {
+  
+  # Generate a sample from Exp(1)
+  samp_data <- rexp(n_samp, rate = 1)  # Mean is 1
+  
+  # Bootstrap resampling
+  boot_res <- boot(samp_data, statistic = boot_mean, R = 1000)
+  
+  # Compute percentile confidence interval
+  ci <- boot.ci(boot_res, type = "perc")$percent[4:5]
+  
+  # Check if true mean (1) is within the interval
+  (ci[1] <= 1) & (ci[2] >= 1)
+}
+
+stopCluster(cl)
+
+cov_prob <- mean(results)
+print(paste("Estimated Coverage:", round(cov_prob, 3)))
+
